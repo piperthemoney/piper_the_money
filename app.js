@@ -5,6 +5,8 @@ import cors from "express";
 import sanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+
+import authRouter from "./routes/auth.route.js";
 import CustomError from "./utils/customError.js";
 import globalErrorHandler from "./controllers/error.controller.js";
 
@@ -37,6 +39,9 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: "10kb" }));
 app.use(sanitize());
+
+// mount routing
+app.use("/api/v1/auth", authRouter);
 
 app.all("*", (req, res, next) => {
   const err = new CustomError(
