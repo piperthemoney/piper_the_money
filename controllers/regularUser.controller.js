@@ -58,6 +58,7 @@ export const getAllCodeStatuses = asyncErrorHandler(async (req, res, next) => {
 
   const results = users.map((user) => ({
     merchant: user.merchant,
+    lifespan: user.lifespan,
     codes: user.genCode.map((codeEntry) => ({
       code: codeEntry.code,
       activationDate: codeEntry.activationDate,

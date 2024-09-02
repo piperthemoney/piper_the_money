@@ -1,57 +1,51 @@
-import cron from "node-cron";
-import RegularUser from "../models/regularUser.model.js"; // Adjust the path as necessary
+import RegularUser from "../models/regularUser.model.js";
 import moment from "moment-timezone";
 
-// Helper function to convert lifespan to days
-const lifespanToDays = (lifespan) => {
+// Helper function to convert lifespan to minutes
+const lifespanToMinutes = (lifespan) => {
   switch (lifespan) {
     case "5mins":
-      return 5 / (24 * 60);
+      return 5;
     case "1hour":
-      return 1 / 24;
+      return 60;
     case "1day":
-      return 1;
+      return 60 * 24;
     case "7days":
-      return 7;
+      return 60 * 24 * 7;
     case "1month":
-      return 30;
+      return 60 * 24 * 30;
     case "3months":
-      return 90;
+      return 60 * 24 * 90;
     case "6months":
-      return 180;
+      return 60 * 24 * 180;
     case "1year":
-      return 365;
+      return 60 * 24 * 365;
     default:
-      return 30;
+      return 60 * 24 * 30; // Default to 1 month
   }
 };
 
 // Function to update isActive status for all codes
 export const updateActivationStatuses = async () => {
   try {
-    // Fetch all users
     const users = await RegularUser.find({});
 
-    // Process each user
     for (const user of users) {
-      // Update each code entry's isActive status
       for (const codeEntry of user.genCode) {
         if (codeEntry.activationDate) {
-          // Convert activation date to UTC
           const activationDateUTC = moment(codeEntry.activationDate).utc();
+          const lifespanMinutes = lifespanToMinutes(user.lifespan);
+          const expirationTime = activationDateUTC.add(
+            lifespanMinutes,
+            "minutes"
+          );
 
-          // Calculate the expiration date based on the lifespan
-          const lifespanDays = lifespanToDays(user.lifespan);
-          const lifespanEndUTC = activationDateUTC.add(lifespanDays, "days");
-
-          // Check if the current date in UTC is less than or equal to the expiration date
-          codeEntry.isActive = moment().utc().isSameOrBefore(lifespanEndUTC);
+          codeEntry.isActive = moment().utc().isSameOrBefore(expirationTime);
         } else {
           codeEntry.isActive = null;
         }
       }
 
-      // Save updated user document
       await user.save();
     }
 
