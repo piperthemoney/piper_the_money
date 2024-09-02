@@ -20,7 +20,9 @@
     "express-rate-limit": "^7.4.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "moment-timezone": "^0.5.45",
     "mongoose": "^8.5.4",
+    "node-cron": "^3.0.3",
     "nodemailer": "^6.9.14",
     "validator": "^13.12.0"
   }

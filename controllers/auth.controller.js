@@ -7,7 +7,7 @@ import sendEmail from "../utils/sendEmail.js";
 import utli from "util";
 
 export const signToken = (id) => {
-  return jwt.sign({ id }, process.env.SECRET_STR, {
+  return jwt.sign({ id }, process.env.SECRET_WEB, {
     expiresIn: process.env.LOGIN_EXPIRES,
   });
 };
@@ -82,7 +82,7 @@ export const protect = asyncErrorHandler(async (req, res, next) => {
   //validate the token
   const decodedToken = await utli.promisify(jwt.verify)(
     token,
-    process.env.SECRET_STR
+    process.env.SECRET_WEB
   );
   //if the user exist
   const user = await User.findById(decodedToken.id);

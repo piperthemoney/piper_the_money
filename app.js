@@ -6,9 +6,10 @@ import sanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 
-import authRouter from "./routes/auth.route.js";
 import CustomError from "./utils/customError.js";
 import globalErrorHandler from "./controllers/error.controller.js";
+import authRouter from "./routes/auth.route.js";
+import regularUserRouter from "./routes/regularUser.route.js";
 
 const app = express();
 app.use(helmet());
@@ -42,6 +43,7 @@ app.use(sanitize());
 
 // mount routing
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/regular-users", regularUserRouter);
 
 app.all("*", (req, res, next) => {
   const err = new CustomError(
