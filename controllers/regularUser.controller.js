@@ -52,19 +52,22 @@ export const createRegularUser = asyncErrorHandler(async (req, res, next) => {
 });
 
 // Fetch all users and their code statuses
-export const getAllCodeStatuses = asyncErrorHandler(async (req, res, next) => {
+export const getOverViewStatus = asyncErrorHandler(async (req, res, next) => {
   // Fetch all RegularUser documents
   const users = await RegularUser.find({});
 
   const results = users.map((user) => ({
     merchant: user.merchant,
     lifespan: user.lifespan,
-    codes: user.genCode.map((codeEntry) => ({
-      code: codeEntry.code,
-      activationDate: codeEntry.activationDate,
-      isActive: codeEntry.isActive,
-      lastLogin: codeEntry.lastLogin,
-    })),
+    purchaseDate: user.generatedAt,
+    quantity: user.quantity,
+    id: user._id,
+    // codes: user.genCode.map((codeEntry) => ({
+    //   code: codeEntry.code,
+    //   activationDate: codeEntry.activationDate,
+    //   isActive: codeEntry.isActive,
+    //   lastLogin: codeEntry.lastLogin,
+    // })),
   }));
 
   res.status(200).json({
@@ -151,4 +154,27 @@ export const authenticateJWT = asyncErrorHandler(async (req, res, next) => {
 
   req.user = user;
   next();
+});
+
+export const getDetailStatus = asyncErrorHandler(async (req, res, next) => {
+  const users = await RegularUser.findById(req.params.id);
+
+  if (!users) {
+    return next(
+      new CustomError(404, "No documentation found with the given Id")
+    );
+  }
+  const results = {
+    codes: users.genCode.map((codeEntry) => ({
+      code: codeEntry.code,
+      id: codeEntry._id,
+      activationDate: codeEntry.activationDate,
+      isActive: codeEntry.isActive,
+      lastLogin: codeEntry.lastLogin,
+    })),
+  };
+  res.status(200).json({
+    status: "success",
+    data: results,
+  });
 });

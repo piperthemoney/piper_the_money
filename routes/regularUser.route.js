@@ -2,13 +2,15 @@ import express from "express";
 import {
   createRegularUser,
   activateCode,
-  getAllCodeStatuses,
+  getOverViewStatus,
   authenticateJWT,
+  getDetailStatus,
 } from "../controllers/regularUser.controller.js";
 
 const router = express.Router();
 
 router.post("/", createRegularUser);
 router.post("/activation", activateCode);
-router.get("/", getAllCodeStatuses);
+router.get("/", getOverViewStatus);
+router.get("/:id", getDetailStatus);
 export default router;
