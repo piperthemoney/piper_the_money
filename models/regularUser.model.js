@@ -1,17 +1,30 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
+import crypto from "crypto";
 
 // Function to generate a random activation code
+// const generateCode = () => {
+//   const characters =
+//     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+//   let code = "";
+//   for (let i = 0; i < 8; i++) {
+//     const randomIndex = Math.floor(Math.random() * characters.length);
+//     code += characters[randomIndex];
+//   }
+//   return code;
+// };
+
+// Function to generate a secure random activation code
 const generateCode = () => {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    code += characters[randomIndex];
-  }
-  return code;
+  // Generate 16 random bytes
+  const randomBytes = crypto.randomBytes(16);
+
+  // Convert the bytes to a hexadecimal string and return the first 16 characters
+  return randomBytes.toString("hex").slice(0, 16);
 };
+
+// Example usage
+console.log(generateCode()); // Outputs a 16-character hexadecimal code
 
 // Function to generate unique codes with retries
 const generateUniqueCodes = async (quantity) => {
@@ -120,7 +133,7 @@ const regularUserSchema = new Schema({
     type: Number,
     default: 1,
     min: 1,
-    max: 100,
+    max: 1000000,
   },
 });
 
