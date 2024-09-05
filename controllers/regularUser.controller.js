@@ -157,17 +157,20 @@ export const authenticateJWT = asyncErrorHandler(async (req, res, next) => {
 });
 
 export const getDetailStatus = asyncErrorHandler(async (req, res, next) => {
-  const users = await RegularUser.findById(req.params.id);
+  const user = await RegularUser.findById(req.params.id);
 
-  if (!users) {
+  if (!user) {
     return next(
       new CustomError(404, "No documentation found with the given Id")
     );
   }
   const results = {
-    codes: users.genCode.map((codeEntry) => ({
+    merchant: user.merchant,
+    purchaseDate: user.generatedAt,
+    quantity: user.quantity,
+    Duartion: user.lifespan,
+    codes: user.genCode.map((codeEntry) => ({
       code: codeEntry.code,
-      id: codeEntry._id,
       activationDate: codeEntry.activationDate,
       isActive: codeEntry.isActive,
       lastLogin: codeEntry.lastLogin,
