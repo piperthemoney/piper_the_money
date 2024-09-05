@@ -133,7 +133,7 @@ const regularUserSchema = new Schema({
     type: Number,
     default: 1,
     min: 1,
-    max: 1000000,
+    max: 100,
   },
 });
 
