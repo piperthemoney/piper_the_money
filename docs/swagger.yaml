@@ -1,0 +1,324 @@
+openapi: "3.0.0"
+info:
+  title: Share CMS
+  description: This Documentation will help for Developer and Tester
+  version: "1.0.0"
+tags:
+  - name: Admin Dashboard Auth
+    description: Authentication endpoints
+  - name: Code Generating Api 
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: "User login"
+      description: "Endpoint for user login. Returns a JWT token upon successful authentication."
+      tags:
+        - Admin Dashboard Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: "The user's email address"
+                  example: example@gmail.com
+                password:
+                  type: string
+                  format: password
+                  description: "The user's password"
+                  example: 12345
+      responses:
+        200:
+          description: "Login successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: "User successfully signed in."
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                            example: 66a92c7bfb3256a5e5a4be99
+                          email:
+                            type: string
+                            format: email
+                            example: example@gmail.com
+                          role:
+                            type: string
+                            example: user
+                          passwordChangedAt:
+                            type: string
+                            format: date-time
+                            example: 2024-08-01T11:09:21.124Z
+                      token:
+                        type: string
+                        description: "JWT token for authenticated requests"
+                        example: "token"
+
+        400:
+          description: "Incorrect email or password"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 400
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: "Incorrect email or password."
+
+#####################################################################################################################
+
+  /api/v1/auth/signup:
+    post:
+      summary: "Sign up a new user"
+      description: "This endpoint allows a new user to create an account. Requires authentication and Superadmin access."
+      tags:
+        - Admin Dashboard Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - confirmPassword
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: "The user's email address"
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  description: "The user's password"
+                  example: password123
+                confirmPassword:
+                  type: string
+                  format: password
+                  description: "Confirmation of the user's password"
+                  example: password123
+      responses:
+        201:
+          description: "User created successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 201
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: "User created successfully."
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            format: email
+                            example: user@example.com
+                          role:
+                            type: string
+                            example: user
+                          _id:
+                            type: string
+                            example: 66a7decef4c583c40145e503
+                          createdAt:
+                            type: string
+                            format: date-time
+                            example: 2024-07-29T18:26:22.493Z
+                      token:
+                        type: string
+                        example: "token"
+        400:
+          description: "Invalid input or validation error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 400
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: "This will show the related error message."
+
+#####################################################################################################################
+
+  /api/v1/auth/forgot-password:
+    post:
+      summary: "Requesting to reset password"
+      description: "Endpoint for password reset link request. Send a email upon successful attempt."
+      tags:
+        - Admin Dashboard Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: "The user's email address"
+                  example: example@gmail.com
+      responses:
+        200:
+          description: "Successful request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: "Password reset link has been sent to the user email : example@gmail.com"
+        404:
+          description: "Fail Attempt"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 404
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: "We Could not find the user with given email."
+
+#####################################################################################################################
+
+  /api/v1/auth/reset-password/{token}:
+    patch:
+      summary: "Reset password"
+      description: "This endpoint allows a user to reset their password using a valid token."
+      tags:
+        - Admin Dashboard Auth
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: "The password reset token"
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+                - confirmPassword
+              properties:
+                password:
+                  type: string
+                  format: password
+                  description: "The new password"
+                  example: password123
+                confirmPassword:
+                  type: string
+                  format: password
+                  description: "Confirmation of the new password"
+                  example: password123
+      responses:
+        200:
+          description: "Password successfully reset"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: "Password successfully reset for your account: example@gmail.com"
+                  token:
+                    type: string
+                    example: "token"
+        400:
+          description: "Password doesn't match"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 400
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: "Password Doesn't Match"
+
+#####################################################################################################################

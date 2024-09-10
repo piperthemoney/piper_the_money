@@ -11,6 +11,8 @@ import globalErrorHandler from "./controllers/error.controller.js";
 import authRouter from "./routes/auth.route.js";
 import regularUserRouter from "./routes/regularUser.route.js";
 
+import setupSwagger from "./configs/swagger.config.js";
+
 const app = express();
 app.use(helmet());
 
@@ -45,6 +47,7 @@ app.use(sanitize());
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/regular-users", regularUserRouter);
 
+setupSwagger(app);
 app.all("*", (req, res, next) => {
   const err = new CustomError(
     404,
