@@ -10,6 +10,7 @@ import CustomError from "./utils/customError.js";
 import globalErrorHandler from "./controllers/error.controller.js";
 import authRouter from "./routes/auth.route.js";
 import regularUserRouter from "./routes/regularUser.route.js";
+import monitorRouter from "./routes/monitor.route.js";
 
 import setupSwagger from "./configs/swagger.config.js";
 
@@ -46,6 +47,7 @@ app.use(sanitize());
 // mount routing
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/regular-users", regularUserRouter);
+app.use("/api/v1/monitor", monitorRouter);
 
 setupSwagger(app);
 app.all("*", (req, res, next) => {
