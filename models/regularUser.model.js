@@ -2,18 +2,6 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 import crypto from "crypto";
 
-// Function to generate a random activation code
-// const generateCode = () => {
-//   const characters =
-//     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-//   let code = "";
-//   for (let i = 0; i < 8; i++) {
-//     const randomIndex = Math.floor(Math.random() * characters.length);
-//     code += characters[randomIndex];
-//   }
-//   return code;
-// };
-
 // Function to generate a secure random activation code
 const generateCode = () => {
   // Generate 16 random bytes
@@ -22,9 +10,6 @@ const generateCode = () => {
   // Convert the bytes to a hexadecimal string and return the first 16 characters
   return randomBytes.toString("hex").slice(0, 16);
 };
-
-// Example usage
-console.log(generateCode()); // Outputs a 16-character hexadecimal code
 
 // Function to generate unique codes with retries
 const generateUniqueCodes = async (quantity) => {
@@ -63,14 +48,6 @@ const generateUniqueCodes = async (quantity) => {
 // Helper function to convert lifespan to days
 const lifespanToDays = (lifespan) => {
   switch (lifespan) {
-    case "5mins":
-      return 5 / (24 * 60);
-    case "1hour":
-      return 1 / 24;
-    case "1day":
-      return 1;
-    case "7days":
-      return 7;
     case "1month":
       return 30;
     case "3months":
@@ -117,17 +94,8 @@ const regularUserSchema = new Schema({
   },
   lifespan: {
     type: String,
-    enum: [
-      "5mins",
-      "1hour",
-      "1day",
-      "7days",
-      "1month",
-      "3months",
-      "6months",
-      "1year",
-    ],
-    default: "1month",
+    required: true,
+    enum: ["1month", "3months", "6months", "1year"],
   },
   quantity: {
     type: Number,
