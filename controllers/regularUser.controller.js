@@ -3,6 +3,7 @@ import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import CustomError from "../utils/customError.js";
 import jwt from "jsonwebtoken";
 import util from "util";
+import XLSX from "xlsx";
 
 // Function to generate JWT
 export const generateToken = (userId, code) => {
@@ -180,4 +181,70 @@ export const getDetailStatus = asyncErrorHandler(async (req, res, next) => {
     status: "success",
     data: results,
   });
+});
+
+const convertToMyanmarTime = (date) => {
+  if (!date) return "";
+
+  const utcDate = new Date(date);
+  const myanmarOffset = 6 * 60 + 30; // Offset in minutes
+  const myanmarTime = new Date(utcDate.getTime() + myanmarOffset * 60 * 1000);
+
+  return myanmarTime.toLocaleString("en-GB", { timeZone: "Asia/Yangon" });
+};
+
+export const exportUserById = asyncErrorHandler(async (req, res, next) => {
+  const { id } = req.params;
+
+  const user = await RegularUser.findById(id).select(
+    "genCode generatedAt merchant lifespan quantity"
+  );
+
+  if (!user) {
+    return next(new CustomError(404, "Can't find given Id"));
+  }
+
+  // Prepare the data for Excel
+  const data = [
+    ["Code", "Generated At", "Merchant", "Lifespan", "Quantity"], // Header
+    ...user.genCode.map((gen, index) => [
+      gen.code || "", // Code
+      index === 0 ? convertToMyanmarTime(user.generatedAt) : "", // Generated At (only once)
+      index === 0 ? user.merchant : "", // Merchant (only once)
+      index === 0 ? user.lifespan : "", // Lifespan (only once)
+      index === 0 ? user.quantity : "", // Quantity (only once)
+    ]),
+  ];
+
+  // Create a new workbook and add a worksheet
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+
+  // Add the worksheet to the workbook
+  XLSX.utils.book_append_sheet(wb, ws, "UserExport");
+
+  // Add basic formatting
+  ws["!cols"] = [
+    { width: 30 }, // Code
+    { width: 20 }, // Generated At
+    { width: 20 }, // Merchant
+    { width: 15 }, // Lifespan
+    { width: 10 }, // Quantity
+  ];
+
+  // Create the Excel file in memory
+  const buffer = XLSX.write(wb, { bookType: "xlsx", type: "buffer" });
+
+  // Set headers to prompt file download
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=id-${id}-export.xlsx`
+  );
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  // Send the buffer directly to the client
+  res.send(buffer);
 });
