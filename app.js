@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import CustomError from "./utils/customError.js";
 import globalErrorHandler from "./controllers/error.controller.js";
+import serverManagerRouter from "./routes/serverManagment.route.js";
 
 const app = express();
 app.use(helmet());
@@ -37,6 +38,8 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: "10kb" }));
 app.use(sanitize());
+
+app.use("/api/v1/server-manager", serverManagerRouter);
 
 app.all("*", (req, res, next) => {
   const err = new CustomError(
