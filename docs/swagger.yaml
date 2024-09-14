@@ -6,7 +6,7 @@ info:
 tags:
   - name: Admin Dashboard Auth
     description: Authentication endpoints
-  - name: Code Generating Api 
+  - name: Mobile
 components:
   securitySchemes:
     bearerAuth:
@@ -322,3 +322,148 @@ paths:
                     example: "Password Doesn't Match"
 
 #####################################################################################################################
+  /api/v1/regular-users/activation:
+    post:
+      summary: "Activate a user account"
+      description: "This endpoint allows you to activate a user account using an activation code."
+      tags:
+        - Mobile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: "The activation code to be used for activation"
+                  example: "16bitcodeformat"
+      responses:
+        200:
+          description: "Code activated successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: "Code activated successfully"
+                  token:
+                    type: string
+                    description: "JWT token for authenticated requests"
+                    example: "token"
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          batch:
+                            type: string
+                            example: "bobo"
+                          codeEntry:
+                            type: object
+                            properties:
+                              code:
+                                type: string
+                                example: "16bitcodeformat"
+                              activationDate:
+                                type: string
+                                format: date-time
+                                example: "2024-09-14T21:21:14.538Z"
+                              isActive:
+                                type: boolean
+                                example: true
+                              lastLogin:
+                                type: string
+                                format: date-time
+                                example: "2024-09-14T22:16:27.256Z"
+                              _id:
+                                type: string
+                                example: "66e5fe3202fa475062dfgegr"
+        404:
+          description: "Activation code not found"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 404
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: "Activation code not found."
+#########################################################################################
+
+  /api/v1/server-manager/batch:
+    get:
+      summary: "Retrieve server batch information"
+      description: "This endpoint retrieves server batch information including server links, hostnames, geo-location, and server IP addresses."
+      tags:
+        - Mobile
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Batch information retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        vlessServers:
+                          type: string
+                          description: "Server link for VLESS protocol"
+                          example: "This will show server link"
+                        _id:
+                          type: string
+                          description: "Unique identifier for the server batch"
+                          example: "66e5fe2602fa47506argrdfg"
+                        hostname:
+                          type: string
+                          description: "Hostname related code"
+                          example: "this is related code."
+                        geoLocation:
+                          type: string
+                          description: "Geographical location of the server"
+                          example: "SG"
+                        serverAddress:
+                          type: string
+                          description: "Server IP address"
+                          example: "This Will show Server IP address"
+        400:
+          description: "Batch not found for the user"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 400
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: "Batch not found for the user."
+            

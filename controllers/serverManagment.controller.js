@@ -19,9 +19,6 @@ export const serverCreate = asyncErrorHandler(async (req, res, next) => {
   res.status(201).json({
     code: 201,
     status: "success",
-    data: {
-      servers: savedServer,
-    },
   });
 });
 
@@ -44,6 +41,7 @@ export const viewServers = asyncErrorHandler(async (req, res, next) => {
   // Send the response
   res.status(200).json({
     status: "success",
+    length: results.length,
     data: results,
   });
 });
@@ -66,6 +64,7 @@ export const viewBatchData = asyncErrorHandler(async (req, res, next) => {
   res.status(200).json({
     code: 200,
     status: "success",
+    length: server.serverData.length,
     data: server,
   });
 });
@@ -125,32 +124,6 @@ export const updateVlessServer = asyncErrorHandler(async (req, res, next) => {
   });
 });
 
-// export const getServerDataByBatch = asyncErrorHandler(
-//   async (req, res, next) => {
-//     const user = req.user; // Authenticated user
-//     const batch = user.batch; // User's batch
-
-//     if (!batch) {
-//       return next(new CustomError(400, "Batch not found for the user"));
-//     }
-
-//     // Fetch server data from ServerManager schema based on the user's batch
-//     const serverData = await ServerManager.findOne({ batch }).select(
-//       "serverData"
-//     );
-
-//     if (!serverData) {
-//       return next(
-//         new CustomError(404, "No server data found for the user's batch")
-//       );
-//     }
-
-//     res.status(200).json({
-//       status: "success",
-//       data: serverData.serverData,
-//     });
-//   }
-// );
 export const getServerDataByBatch = asyncErrorHandler(
   async (req, res, next) => {
     const user = req.user; // Authenticated user
@@ -160,13 +133,10 @@ export const getServerDataByBatch = asyncErrorHandler(
       return next(new CustomError(400, "Batch not found for the user"));
     }
 
-    console.log(`Querying ServerManager with batch: ${batch}`);
-
     // Fetch server data from ServerManager schema based on the user's batch
     const serverData = await ServerManager.findOne({ batch }).select(
       "serverData"
     );
-    console.log(`Server data result: ${JSON.stringify(serverData)}`);
     if (!serverData) {
       return next(
         new CustomError(404, "No server data found for the user's batch")
