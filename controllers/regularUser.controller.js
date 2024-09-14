@@ -1,4 +1,5 @@
 import RegularUser from "../models/regularUser.model.js";
+import ServerManager from "../models/serverManagment.model.js";
 import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import CustomError from "../utils/customError.js";
 import jwt from "jsonwebtoken";
@@ -6,13 +7,40 @@ import util from "util";
 import XLSX from "xlsx";
 
 // Function to generate JWT
-export const generateToken = (userId, code) => {
-  return jwt.sign({ userId, code }, process.env.SECRET_APP);
+export const generateToken = (userId, code, batch) => {
+  return jwt.sign({ userId, code, batch }, process.env.SECRET_APP);
 };
+
+export const authenticateJWT = asyncErrorHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  let token;
+  if (authHeader && authHeader.startsWith("Bearer")) {
+    token = authHeader.split(" ")[1];
+  }
+  if (!token) {
+    return next(
+      new CustomError(401, "You are not logged in! Activation code required")
+    );
+  }
+
+  const decodedToken = await util.promisify(jwt.verify)(
+    token,
+    process.env.SECRET_APP
+  );
+
+  const user = await RegularUser.findById(decodedToken.userId).select(); // Ensure .select() is used if needed to exclude sensitive fields
+
+  if (!user) {
+    return next(new CustomError(401, "The User does not exist"));
+  }
+
+  req.user = user;
+  next();
+});
 
 // Create a new RegularUser and generate activation codes
 export const createRegularUser = asyncErrorHandler(async (req, res, next) => {
-  const { merchant, quantity, lifespan } = req.body;
+  const { merchant, quantity, lifespan, batchName } = req.body;
 
   // Ensure that the quantity is a positive integer
   if (!Number.isInteger(quantity) || quantity < 1) {
@@ -20,18 +48,15 @@ export const createRegularUser = asyncErrorHandler(async (req, res, next) => {
   }
 
   // Ensure lifespan is a valid value
-  const validLifespans = [
-    "5mins",
-    "1hour",
-    "1day",
-    "7days",
-    "1month",
-    "3months",
-    "6months",
-    "1year",
-  ];
+  const validLifespans = ["1month", "3months", "6months", "1year"];
   if (!validLifespans.includes(lifespan)) {
     return next(new CustomError(400, "Invalid Lifespan Value."));
+  }
+
+  // Check if the batch exists
+  const batch = await ServerManager.findOne({ batch: batchName });
+  if (!batch) {
+    return next(new CustomError(404, `Batch Name : ${batchName} not found`));
   }
 
   // Create a new RegularUser instance
@@ -39,9 +64,10 @@ export const createRegularUser = asyncErrorHandler(async (req, res, next) => {
     merchant,
     quantity,
     lifespan,
+    batch: batchName, // Store the batch name directly
   });
 
-  // Save the user (this will trigger the pre-save middleware to generate the codes)
+  // Save the user
   const savedUser = await newUser.save();
 
   // Respond with the created user
@@ -113,48 +139,21 @@ export const activateCode = asyncErrorHandler(async (req, res, next) => {
   // Save the updated user document
   await user.save();
 
-  // Generate JWT
-  const token = generateToken(user._id, code);
+  // Generate JWT with user id and batch
+  const token = generateToken(user._id, code, user.batch); // Adjust token generation to include batch
 
   res.status(200).json({
     status: "success",
     message: "Code activated successfully",
     token,
     data: {
-      user: codeEntry,
+      user: {
+        //_id: user._id.toString(), // Convert ObjectId to string if necessary
+        batch: user.batch, // Include batch in the response
+        codeEntry,
+      },
     },
   });
-});
-
-// Middleware to authenticate JWT
-export const authenticateJWT = asyncErrorHandler(async (req, res, next) => {
-  // Read the token & check if it exists
-  const authHeader = req.headers.authorization;
-  let token;
-  if (authHeader && authHeader.startsWith("Bearer")) {
-    token = authHeader.split(" ")[1];
-  }
-  if (!token) {
-    return next(
-      new CustomError(401, "You are not logged in! Activation code required")
-    );
-  }
-
-  // Validate the token
-  const decodedToken = await util.promisify(jwt.verify)(
-    token,
-    process.env.SECRET_APP
-  );
-
-  // Check if the user exists
-  const user = await RegularUser.findById(decodedToken.userId);
-
-  if (!user) {
-    return next(new CustomError(401, "The User does not exist"));
-  }
-
-  req.user = user;
-  next();
 });
 
 export const getDetailStatus = asyncErrorHandler(async (req, res, next) => {

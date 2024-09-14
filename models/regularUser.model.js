@@ -103,6 +103,10 @@ const regularUserSchema = new Schema({
     min: 1,
     max: 100,
   },
+  batch: {
+    type: String,
+    required: true,
+  },
 });
 
 // Middleware to generate codes before saving

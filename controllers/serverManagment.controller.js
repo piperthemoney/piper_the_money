@@ -5,7 +5,6 @@ import { extractDataFromVlessLink } from "../utils/vlessExtractor.js";
 
 export const serverCreate = asyncErrorHandler(async (req, res, next) => {
   const { batch, serverData } = req.body;
-  console.log(serverData);
 
   if (!batch || !serverData) {
     return next(new CustomError(400, "Please filled required data."));
@@ -65,6 +64,7 @@ export const viewBatchData = asyncErrorHandler(async (req, res, next) => {
 
   // Send the response with the server data
   res.status(200).json({
+    code: 200,
     status: "success",
     data: server,
   });
@@ -124,3 +124,58 @@ export const updateVlessServer = asyncErrorHandler(async (req, res, next) => {
     data: server,
   });
 });
+
+// export const getServerDataByBatch = asyncErrorHandler(
+//   async (req, res, next) => {
+//     const user = req.user; // Authenticated user
+//     const batch = user.batch; // User's batch
+
+//     if (!batch) {
+//       return next(new CustomError(400, "Batch not found for the user"));
+//     }
+
+//     // Fetch server data from ServerManager schema based on the user's batch
+//     const serverData = await ServerManager.findOne({ batch }).select(
+//       "serverData"
+//     );
+
+//     if (!serverData) {
+//       return next(
+//         new CustomError(404, "No server data found for the user's batch")
+//       );
+//     }
+
+//     res.status(200).json({
+//       status: "success",
+//       data: serverData.serverData,
+//     });
+//   }
+// );
+export const getServerDataByBatch = asyncErrorHandler(
+  async (req, res, next) => {
+    const user = req.user; // Authenticated user
+    const batch = user.batch; // User's batch
+
+    if (!batch) {
+      return next(new CustomError(400, "Batch not found for the user"));
+    }
+
+    console.log(`Querying ServerManager with batch: ${batch}`);
+
+    // Fetch server data from ServerManager schema based on the user's batch
+    const serverData = await ServerManager.findOne({ batch }).select(
+      "serverData"
+    );
+    console.log(`Server data result: ${JSON.stringify(serverData)}`);
+    if (!serverData) {
+      return next(
+        new CustomError(404, "No server data found for the user's batch")
+      );
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: serverData.serverData,
+    });
+  }
+);

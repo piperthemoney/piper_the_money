@@ -8,7 +8,7 @@ const serverManagmentSchema = new Schema({
   batch: {
     type: String,
     required: true,
-    unique: true,
+    // unique: true,
   },
   serverData: [
     {
