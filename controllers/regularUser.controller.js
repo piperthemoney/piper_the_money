@@ -7,8 +7,8 @@ import util from "util";
 import XLSX from "xlsx";
 
 // Function to generate JWT
-export const generateToken = (userId, code, batch) => {
-  return jwt.sign({ userId, code, batch }, process.env.SECRET_APP);
+export const generateToken = (userId, code, batch, lifespan) => {
+  return jwt.sign({ userId, code, batch, lifespan }, process.env.SECRET_APP);
 };
 
 export const authenticateJWT = asyncErrorHandler(async (req, res, next) => {
@@ -23,18 +23,35 @@ export const authenticateJWT = asyncErrorHandler(async (req, res, next) => {
     );
   }
 
+  // Decode the JWT token and extract the code
   const decodedToken = await util.promisify(jwt.verify)(
     token,
     process.env.SECRET_APP
   );
+  const { userId, code: authCode } = decodedToken; // Assuming JWT contains userId and the specific code
 
-  const user = await RegularUser.findById(decodedToken.userId).select(); // Ensure .select() is used if needed to exclude sensitive fields
+  // Find the user based on userId
+  const user = await RegularUser.findById(userId).select(); // Adjust `.select()` if you want to exclude sensitive fields
 
   if (!user) {
     return next(new CustomError(401, "The User does not exist"));
   }
 
-  req.user = user;
+  // Filter the genCode array to get only the authenticated code
+  const matchedCode = user.genCode.find(
+    (codeEntry) => codeEntry.code === authCode
+  );
+
+  if (!matchedCode) {
+    return next(new CustomError(401, "Invalid activation code"));
+  }
+
+  // Attach the relevant code to req.user
+  req.user = {
+    ...user.toObject(), // Ensure this is converted to a plain JS object
+    genCode: [matchedCode], // Only the matched code is attached
+  };
+
   next();
 });
 
@@ -140,21 +157,23 @@ export const activateCode = asyncErrorHandler(async (req, res, next) => {
   await user.save();
 
   // Generate JWT with user id and batch
-  const token = generateToken(user._id, code, user.batch); // Adjust token generation to include batch
+  const token = generateToken(user._id, code, user.batch, user.lifespan); // Adjust token generation to include batch
 
   res.status(200).json({
+    code: 200,
     status: "success",
     message: "Code activated successfully",
     token,
     data: {
       user: {
-        //_id: user._id.toString(), // Convert ObjectId to string if necessary
         batch: user.batch, // Include batch in the response
         codeEntry,
+        lifespan: user.lifespan,
       },
     },
   });
 });
+``;
 
 export const getDetailStatus = asyncErrorHandler(async (req, res, next) => {
   const user = await RegularUser.findById(req.params.id);
@@ -168,7 +187,7 @@ export const getDetailStatus = asyncErrorHandler(async (req, res, next) => {
     merchant: user.merchant,
     purchaseDate: user.generatedAt,
     quantity: user.quantity,
-    Duartion: user.lifespan,
+    lifespan: user.lifespan,
     codes: user.genCode.map((codeEntry) => ({
       code: codeEntry.code,
       activationDate: codeEntry.activationDate,
