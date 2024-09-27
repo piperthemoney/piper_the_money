@@ -1,7 +1,89 @@
+import ping from "ping";
 import ServerManager from "../models/serverManagment.model.js";
 import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import CustomError from "../utils/customError.js";
 import { extractDataFromVlessLink } from "../utils/vlessExtractor.js";
+
+let io;
+
+export const initializeSocketIO = (socketIO) => {
+  io = socketIO; // Assign the Socket.IO instance
+};
+
+const pingServers = async () => {
+  const servers = await ServerManager.find();
+  const pingPromises = [];
+
+  // Loop through each server and push ping promises
+  servers.forEach((server) => {
+    server.serverData.forEach((serverDetail) => {
+      const serverAddress = serverDetail.serverAddress;
+
+      // Push each ping promise to the array
+      pingPromises.push(
+        ping.promise.probe(serverAddress, { timeout: 3 }).then((result) => {
+          const pingResult = {
+            serverAddress,
+            status: result.alive ? "UP" : "DOWN",
+            responseTime: result.alive ? result.time : "timeout", // Response time in ms
+          };
+
+          // Emit the result to connected clients
+          // console.log("Emitting ping results:", pingResult);
+          io.emit("pingResult", pingResult); // Emit ping result
+
+          return pingResult; // Return the result for further processing if needed
+        })
+      );
+    });
+  });
+
+  // Wait for all ping results to complete
+  await Promise.all(pingPromises);
+};
+
+export const startPingTesting = () => {
+  pingServers(); // Initial call to start pinging
+
+  // Set interval to ping every 3 seconds
+  setInterval(() => {
+    pingServers();
+  }, 3000);
+};
+
+export const serversStatus = asyncErrorHandler(async (req, res, next) => {
+  // Fetch all ServerManager documents
+  const servers = await ServerManager.find({});
+  const pingPromises = [];
+
+  // Loop through each server
+  servers.forEach((server) => {
+    // Loop through each server detail
+    server.serverData.forEach((serverDetail) => {
+      const serverAddress = serverDetail.serverAddress;
+
+      // Push each ping promise to the array
+      pingPromises.push(
+        ping.promise.probe(serverAddress, { timeout: 3 }).then((result) => ({
+          serverAddress,
+          status: result.alive ? "UP" : "DOWN",
+          responseTime: result.alive ? result.time : "timeout", // Response time in ms
+          geoLocation: serverDetail.geoLocation, // Include geoLocation
+          vlessServers: serverDetail.vlessServers, // Include vlessServers
+        }))
+      );
+    });
+  });
+
+  // Wait for all ping results to complete
+  const pingResults = await Promise.all(pingPromises);
+
+  // Send the ping results as a response
+  return res.status(200).json({
+    status: "success",
+    data: pingResults,
+  });
+});
 
 export const serverCreate = asyncErrorHandler(async (req, res, next) => {
   const { batch, serverData } = req.body;
@@ -51,30 +133,6 @@ export const pushServer = asyncErrorHandler(async (req, res, next) => {
     status: "success",
     message: "New Server Link Successfully added.",
     data: serverManager, // Return the updated document
-  });
-});
-
-export const viewServers = asyncErrorHandler(async (req, res, next) => {
-  // Fetch all ServerManager documents
-  const servers = await ServerManager.find({});
-
-  const results = servers.map((server) => ({
-    batch: server.batch, // Access `batch` from each `server`
-    id: server._id,
-    serverData: server.serverData.map((dataEntry) => ({
-      vlessServers: dataEntry.vlessServers, // Retain the original VLESS link
-      hostname: dataEntry.hostname,
-      geoLocation: dataEntry.geoLocation,
-      serverAddress: dataEntry.serverAddress,
-      id: dataEntry._id,
-    })),
-  }));
-
-  // Send the response
-  res.status(200).json({
-    status: "success",
-    length: results.length,
-    data: results,
   });
 });
 
