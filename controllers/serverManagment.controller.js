@@ -22,6 +22,38 @@ export const serverCreate = asyncErrorHandler(async (req, res, next) => {
   });
 });
 
+export const pushServer = asyncErrorHandler(async (req, res, next) => {
+  const { serverId } = req.params;
+  const { vlessServers } = req.body;
+
+  // Check if vlessServers is provided
+  if (!vlessServers) {
+    return next(new CustomError(400, "Please fill server link."));
+  }
+
+  // Find the server manager document by ID
+  const serverManager = await ServerManager.findById(serverId);
+
+  // If the document doesn't exist, return a 404 error
+  if (!serverManager) {
+    return next(new CustomError(404, "Given Id Doesn't exist."));
+  }
+
+  // Push the new server data into the serverData array
+  serverManager.serverData.push({ vlessServers });
+
+  // Save the document to trigger the pre-save hook and any validations
+  await serverManager.save();
+
+  // Return a success response
+  res.status(200).json({
+    code: 200,
+    status: "success",
+    message: "New Server Link Successfully added.",
+    data: serverManager, // Return the updated document
+  });
+});
+
 export const viewServers = asyncErrorHandler(async (req, res, next) => {
   // Fetch all ServerManager documents
   const servers = await ServerManager.find({});
