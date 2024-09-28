@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
+
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 export const Db = async () => {
   try {
