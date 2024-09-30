@@ -8,6 +8,7 @@ import helmet from "helmet";
 
 import CustomError from "./utils/customError.js";
 import globalErrorHandler from "./controllers/error.controller.js";
+import appVersionControlRouter from "./routes/appVersion.route.js";
 import customerSupportRouter from "./routes/customerSupport.route.js";
 import socialMediaRouer from "./routes/socialMedia.route.js";
 import serverManagerRouter from "./routes/serverManagment.route.js";
@@ -54,6 +55,7 @@ app.use("/api/v1/monitor", monitorRouter);
 app.use("/api/v1/server-manager", serverManagerRouter);
 app.use("/api/v1/social", socialMediaRouer);
 app.use("/api/v1/support", customerSupportRouter);
+app.use("/api/v1/version", appVersionControlRouter);
 
 setupSwagger(app);
 app.all("*", (req, res, next) => {
