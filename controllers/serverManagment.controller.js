@@ -3,7 +3,6 @@ import ServerManager from "../models/serverManagment.model.js";
 import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import CustomError from "../utils/customError.js";
 import { extractDataFromVlessLink } from "../utils/vlessExtractor.js";
-import { Server } from "socket.io";
 
 let io;
 
