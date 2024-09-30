@@ -58,18 +58,26 @@ export const serversStatus = asyncErrorHandler(async (req, res, next) => {
 
   // Loop through each server
   servers.forEach((server) => {
+    // const batch = server.batch;
+    // const id = server.id;
     // Loop through each server detail
     server.serverData.forEach((serverDetail) => {
+      const batch = server.batch;
+      const id = server.id;
       const serverAddress = serverDetail.serverAddress;
-
       // Push each ping promise to the array
       pingPromises.push(
         ping.promise.probe(serverAddress, { timeout: 3 }).then((result) => ({
-          serverAddress,
-          status: result.alive ? "UP" : "DOWN",
-          responseTime: result.alive ? result.time : "timeout", // Response time in ms
-          geoLocation: serverDetail.geoLocation, // Include geoLocation
-          vlessServers: serverDetail.vlessServers, // Include vlessServers
+          batch,
+          id,
+          serverData: {
+            serverAddress,
+            status: result.alive ? "UP" : "DOWN",
+            responseTime: result.alive ? result.time : "timeout", // Response time in ms
+            geoLocation: serverDetail.geoLocation, // Include geoLocation
+            vlessServers: serverDetail.vlessServers,
+            id: serverDetail._id,
+          },
         }))
       );
     });
@@ -80,10 +88,52 @@ export const serversStatus = asyncErrorHandler(async (req, res, next) => {
 
   // Send the ping results as a response
   return res.status(200).json({
+    code: 200,
     status: "success",
+    message: "Ping and server data successfully retrived.",
     data: pingResults,
   });
 });
+
+export const viewBatchData = asyncErrorHandler(async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return next(new CustomError(400, "Please provide a server ID."));
+  }
+
+  // Find the server document by its MongoDB _id
+  const server = await ServerManager.findById(id);
+
+  if (!server) {
+    return next(new CustomError(404, "Server not found."));
+  }
+
+  // Send the response with the server data
+  res.status(200).json({
+    status: "success",
+    data: server,
+  });
+});
+
+export const viewBatchDataOverview = asyncErrorHandler(
+  async (req, res, next) => {
+    const servers = await ServerManager.find();
+
+    const results = servers.map((batch) => ({
+      id: batch._id,
+      batch: batch.batch,
+      length: batch.serverData.length,
+    }));
+
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      message: "Batch overview data successfully retrived.",
+      data: results,
+    });
+  }
+);
 
 export const serverCreate = asyncErrorHandler(async (req, res, next) => {
   const { batch, serverData } = req.body;
@@ -133,29 +183,6 @@ export const pushServer = asyncErrorHandler(async (req, res, next) => {
     status: "success",
     message: "New Server Link Successfully added.",
     data: serverManager, // Return the updated document
-  });
-});
-
-export const viewBatchData = asyncErrorHandler(async (req, res, next) => {
-  const { id } = req.params;
-
-  if (!id) {
-    return next(new CustomError(400, "Please provide a server ID."));
-  }
-
-  // Find the server document by its MongoDB _id
-  const server = await ServerManager.findById(id);
-
-  if (!server) {
-    return next(new CustomError(404, "Server not found."));
-  }
-
-  // Send the response with the server data
-  res.status(200).json({
-    code: 200,
-    status: "success",
-    length: server.serverData.length,
-    data: server,
   });
 });
 
