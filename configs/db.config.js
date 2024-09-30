@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-import { fileURLToPath } from "url"; // Import fileURLToPath
-import { dirname, resolve } from "path";
+// import dotenv from "dotenv";
+// import { fileURLToPath } from "url";
+// import { dirname, resolve } from "path";
 // dotenv.config({ path: "./.env" });
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
 
 // Load environment variables from the .env file in the same directory
-dotenv.config({ path: resolve(__dirname, ".env") });
+// dotenv.config({ path: resolve(__dirname, ".env") });
 
 export const Db = async () => {
   try {
