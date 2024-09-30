@@ -3,7 +3,6 @@ import ServerManager from "../models/serverManagment.model.js";
 import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import CustomError from "../utils/customError.js";
 import { extractDataFromVlessLink } from "../utils/vlessExtractor.js";
-import { Server } from "socket.io";
 
 let io;
 
@@ -138,7 +137,6 @@ export const viewBatchDataOverview = asyncErrorHandler(
 
 export const serverCreate = asyncErrorHandler(async (req, res, next) => {
   const { batch, serverData } = req.body;
-  console.log(serverData);
 
   if (!batch || !serverData) {
     return next(new CustomError(400, "Please filled required data."));
@@ -153,9 +151,6 @@ export const serverCreate = asyncErrorHandler(async (req, res, next) => {
   res.status(201).json({
     code: 201,
     status: "success",
-    data: {
-      servers: savedServer,
-    },
   });
 });
 
@@ -245,3 +240,29 @@ export const updateVlessServer = asyncErrorHandler(async (req, res, next) => {
     data: server,
   });
 });
+
+export const getServerDataByBatch = asyncErrorHandler(
+  async (req, res, next) => {
+    const user = req.user; // Authenticated user
+    const batch = user.batch; // User's batch
+
+    if (!batch) {
+      return next(new CustomError(400, "Batch not found for the user"));
+    }
+
+    // Fetch server data from ServerManager schema based on the user's batch
+    const serverData = await ServerManager.findOne({ batch }).select(
+      "serverData"
+    );
+    if (!serverData) {
+      return next(
+        new CustomError(404, "No server data found for the user's batch")
+      );
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: serverData.serverData,
+    });
+  }
+);
