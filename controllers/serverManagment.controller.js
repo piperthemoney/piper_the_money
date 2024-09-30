@@ -3,6 +3,7 @@ import ServerManager from "../models/serverManagment.model.js";
 import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import CustomError from "../utils/customError.js";
 import { extractDataFromVlessLink } from "../utils/vlessExtractor.js";
+import RegularUser from "../models/regularUser.model.js";
 
 let io;
 
@@ -118,18 +119,40 @@ export const viewBatchData = asyncErrorHandler(async (req, res, next) => {
 
 export const viewBatchDataOverview = asyncErrorHandler(
   async (req, res, next) => {
+    // Fetch all ServerManager (batches) from the ServerManager schema
     const servers = await ServerManager.find();
+    if (!servers) {
+      return next(new CustomError(404, "There is no batch in the database."));
+    }
 
-    const results = servers.map((batch) => ({
-      id: batch._id,
-      batch: batch.batch,
-      length: batch.serverData.length,
-    }));
+    // Fetch all regular users from the RegularUser schema
+    const users = await RegularUser.find();
+    if (!users) {
+      return next(new CustomError(404, "There is no user in the database"));
+    }
 
+    const results = servers.map((batch) => {
+      // Filter users that belong to the current batch
+      const usersInBatch = users.filter((user) => user.batch === batch.batch);
+
+      // Calculate the total number of generated codes for this batch using the quantity field
+      const totalGenCodeCount = usersInBatch.reduce((total, user) => {
+        return total + (user.quantity || 0); // Sum up the quantity for each user
+      }, 0);
+
+      return {
+        id: batch._id,
+        batch: batch.batch,
+        serverCount: batch.serverData.length, // Number of servers in the batch
+        totalGenCodeCount, // Total count of generated codes for users in this batch
+      };
+    });
+
+    // Send the response with batch data overview
     res.status(200).json({
       code: 200,
       status: "success",
-      message: "Batch overview data successfully retrived.",
+      message: "Batch overview data successfully retrieved.",
       data: results,
     });
   }

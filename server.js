@@ -27,7 +27,6 @@ cron.schedule("*/5 * * * *", () => {
   console.log("Running cron job to update activation statuses...");
   updateActivationStatuses();
 });
-
 // Create an HTTP server using the Express app
 const server = http.createServer(app);
 const io = new Server(server); // Initialize Socket.IO with the HTTP server
