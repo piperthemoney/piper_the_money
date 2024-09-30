@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import CustomError from "./utils/customError.js";
 import globalErrorHandler from "./controllers/error.controller.js";
+import appVersionControlRouter from "./routes/appVersion.route.js";
 
 const app = express();
 app.use(helmet());
@@ -33,6 +34,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.use("/api/v1/version", appVersionControlRouter);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: "10kb" }));
