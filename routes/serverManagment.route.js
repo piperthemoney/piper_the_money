@@ -7,14 +7,12 @@ import {
   pushServer,
   serversStatus,
   viewBatchDataOverview,
-  getServerDataByBatch,
 } from "../controllers/serverManagment.controller.js";
 import { authenticateJWT } from "../controllers/regularUser.controller.js";
 
 const router = express.Router();
 
 router.post("/", serverCreate);
-router.get("/batch", authenticateJWT, getServerDataByBatch);
 router.post("/:serverId", pushServer);
 router.get("/batch", authenticateJWT, getServerDataByBatch);
 router.get("/overview", viewBatchDataOverview);
