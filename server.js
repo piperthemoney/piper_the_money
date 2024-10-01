@@ -3,7 +3,6 @@ import app from "./app.js";
 import http from "http";
 import cron from "node-cron";
 import { updateActivationStatuses } from "./crons/updateUserStatuses.js";
-// Import http to create the server
 import { Server } from "socket.io"; // Import Socket.IO
 import {
   initializeSocketIO,
@@ -22,14 +21,24 @@ process.on("uncaughtException", (err) => {
 Db();
 
 const port = process.env.PORT || 5500;
+
 // Schedule the cron job to run every five minutes
 cron.schedule("*/5 * * * *", () => {
   console.log("Running cron job to update activation statuses...");
   updateActivationStatuses();
 });
+
 // Create an HTTP server using the Express app
 const server = http.createServer(app);
-const io = new Server(server); // Initialize Socket.IO with the HTTP server
+
+// Initialize Socket.IO with CORS configuration
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+  },
+});
 
 // Initialize Socket.IO in the controller
 initializeSocketIO(io);
