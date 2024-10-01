@@ -1,9 +1,9 @@
 import Db from "./configs/db.config.js";
 import app from "./app.js";
-import http from "http"; import cron from "node-cron";
+import http from "http";
+import cron from "node-cron";
 import { updateActivationStatuses } from "./crons/updateUserStatuses.js";
-// Import http to create the server
-import { Server } from "socket.io"; // Import Socket.IO
+import { Server } from "socket.io";
 import {
   initializeSocketIO,
   startPingTesting,
@@ -30,30 +30,25 @@ cron.schedule("*/5 * * * *", () => {
 const server = http.createServer(app);
 const io = new Server(server); // Initialize Socket.IO with the HTTP server
 
-// Initialize Socket.IO in the controller
 initializeSocketIO(io);
 
-// Start the ping testing process
-startPingTesting(io); // Pass the io instance to startPingTesting
+startPingTesting(io);
 
 // Socket.IO connection setup
 io.on("connection", (socket) => {
   console.log("New client connected");
 
-  // Listen for ping results from the server-side pinging process
-  socket.on("pingResults", (data) => {
+  socket.on("pingResult", (data) => {
     console.log("Ping Results:", data);
-    // You can also emit these results back to the client if needed
-    socket.emit("pingResults", data); // Emit to the connected socket
+
+    socket.emit("pingResult", data); // Emit to the connected socket
   });
 
-  // Clean up on client disconnect
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
 });
 
-// Start the server
 server.listen(port, () => {
   console.log(`SERVER is Running at PORT:${port}`);
 });
