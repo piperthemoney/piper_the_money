@@ -52,7 +52,7 @@ export const startPingTesting = () => {
   // Set interval to ping every 3 seconds
   setInterval(() => {
     pingServers();
-  }, 3000);
+  }, 10000);
 };
 
 export const serversStatus = asyncErrorHandler(async (req, res, next) => {
