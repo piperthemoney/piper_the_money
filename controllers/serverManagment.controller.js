@@ -14,33 +14,36 @@ export const initializeSocketIO = (socketIO) => {
 const pingServers = async () => {
   const servers = await ServerManager.find();
   const pingPromises = [];
+  const pingResults = [];
 
-  // Loop through each server and push ping promises
   servers.forEach((server) => {
     server.serverData.forEach((serverDetail) => {
       const serverAddress = serverDetail.serverAddress;
-
-      // Push each ping promise to the array
       pingPromises.push(
-        ping.promise.probe(serverAddress, { timeout: 3 }).then((result) => {
+        ping.promise.probe(serverAddress, { timeout: 5 }).then((result) => {
           const pingResult = {
             serverAddress,
             status: result.alive ? "UP" : "DOWN",
-            responseTime: result.alive ? result.time : "timeout", // Response time in ms
+            responseTime: result.alive ? result.time : "timeout",
           };
 
           // Emit the result to connected clients
-          // console.log("Emitting ping results:", pingResult);
+          console.log("Emitting ping result:", pingResult);
           io.emit("pingResult", pingResult); // Emit ping result
 
-          return pingResult; // Return the result for further processing if needed
+          pingResults.push(pingResult);
+          //console.log(`Ping result for ${serverAddress}:`, pingResult);
+
+          return pingResult;
         })
       );
     });
   });
 
-  // Wait for all ping results to complete
   await Promise.all(pingPromises);
+  // console.log("All Ping Results:", pingResults);
+
+  return pingResults;
 };
 
 export const startPingTesting = () => {
