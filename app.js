@@ -8,6 +8,7 @@ import helmet from "helmet";
 import CustomError from "./utils/customError.js";
 import globalErrorHandler from "./controllers/error.controller.js";
 import appVersionControlRouter from "./routes/appVersion.route.js";
+import preAppVersionControlRouter from "./routes/preAppVersion.route.js";
 
 const app = express();
 app.use(helmet());
@@ -35,11 +36,13 @@ app.use(
   })
 );
 
-app.use("/api/v1/version", appVersionControlRouter);
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: "10kb" }));
 app.use(sanitize());
+
+//Mount Routing
+app.use("/api/v1/version", appVersionControlRouter);
+app.use("/api/v1/pre-version", preAppVersionControlRouter);
 
 app.all("*", (req, res, next) => {
   const err = new CustomError(
