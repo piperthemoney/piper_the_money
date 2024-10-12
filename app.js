@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: "10kb" }));
 app.use(sanitize());
 
-//Mount Routing
+// mount routing
 app.use("/api/v1/version", appVersionControlRouter);
 app.use("/api/v1/pre-version", preAppVersionControlRouter);
 
