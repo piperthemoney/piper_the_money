@@ -17,6 +17,7 @@ import regularUserRouter from "./routes/regularUser.route.js";
 import monitorRouter from "./routes/monitor.route.js";
 
 import setupSwagger from "./configs/swagger.config.js";
+import preAppVersionControlRouter from "./routes/preAppVersion.route.js";
 
 const app = express();
 app.use(helmet());
@@ -56,6 +57,7 @@ app.use("/api/v1/server-manager", serverManagerRouter);
 app.use("/api/v1/social", socialMediaRouer);
 app.use("/api/v1/support", customerSupportRouter);
 app.use("/api/v1/version", appVersionControlRouter);
+app.use("/api/v1/pre-version", preAppVersionControlRouter);
 
 setupSwagger(app);
 app.all("*", (req, res, next) => {
