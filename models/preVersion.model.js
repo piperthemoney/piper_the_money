@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 const preAppVresionSchema = new Schema({
-  preVersion: {
+  version: {
     type: String,
     required: true,
   },
