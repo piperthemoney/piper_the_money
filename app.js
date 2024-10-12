@@ -15,9 +15,9 @@ import serverManagerRouter from "./routes/serverManagment.route.js";
 import authRouter from "./routes/auth.route.js";
 import regularUserRouter from "./routes/regularUser.route.js";
 import monitorRouter from "./routes/monitor.route.js";
+import preAppVersionControlRouter from "./routes/preAppVersion.route.js";
 
 import setupSwagger from "./configs/swagger.config.js";
-import preAppVersionControlRouter from "./routes/preAppVersion.route.js";
 
 const app = express();
 app.use(helmet());
