@@ -3,14 +3,14 @@ import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import CustomError from "../utils/customError.js";
 
 export const createPreAppVersion = asyncErrorHandler(async (req, res, next) => {
-  const { preVersion, playstore, externalUrl } = req.body;
+  const { version, playstore, externalUrl } = req.body;
 
-  if (!preVersion || !playstore || !externalUrl) {
+  if (!version || !playstore || !externalUrl) {
     return next(new CustomError(400, "You have to fill all required field."));
   }
 
   const newPreAppVersion = new PreAppVersion({
-    preVersion,
+    version,
     playstore,
     externalUrl,
   });
@@ -49,7 +49,7 @@ export const retrivedPreVersionControl = asyncErrorHandler(
 export const updatePreVersionControlData = asyncErrorHandler(
   async (req, res, next) => {
     const { id } = req.params;
-    const { preVersion, playstore, externalUrl } = req.body;
+    const { version, playstore, externalUrl } = req.body;
 
     if (!id) {
       return next(new CustomError(404, "Please provide the document id."));
@@ -65,15 +65,13 @@ export const updatePreVersionControlData = asyncErrorHandler(
 
     const updatedPreAppVersion = await PreAppVersion.findByIdAndUpdate(
       id,
-      { preVersion, playstore, externalUrl },
+      { version, playstore, externalUrl },
       { new: true, runValidators: true }
     );
 
     if (!updatedPreAppVersion) {
       return next(new CustomError(400, "Please fill in the data to update."));
     }
-
-    const { __v, ...data } = updatedPreAppVersion._doc;
 
     res.status(200).json({
       code: 200,
